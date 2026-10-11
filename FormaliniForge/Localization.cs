@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,7 +11,7 @@ public partial class MainWindow
 {
     private readonly Dictionary<object, string> originalLabels = new();
     private bool english = true;
-    private string LanguagePreference => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FormaliniForge", "language.txt");
+    private string LanguagePreference => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FormaliniForge", "language-v2.txt");
     private static readonly Dictionary<string, string> englishLabels = new(StringComparer.Ordinal)
     {
         ["Înapoi"] = "Back", ["Înainte"] = "Forward", ["Reîncarcă"] = "Reload", ["Oprește încărcarea"] = "Stop loading",
@@ -186,7 +188,7 @@ public partial class MainWindow
 
     private void ApplyLanguage()
     {
-        try { english = File.Exists(LanguagePreference) ? File.ReadAllText(LanguagePreference).Trim() != "ro" : english; } catch { }
+        try { english = File.Exists(LanguagePreference) ? File.ReadAllText(LanguagePreference).Trim() != "ro" : true; } catch { english = true; }
         LocalizeTree(this);
         BuildMenuItem.Header = projectDir != null && IsWebProject ? (english ? "Build deployable files" : "Generează fișiere de publicare") : T("Generează EXE");
         HybridMenuItem.IsEnabled = projectDir != null && state.Language == "C#";

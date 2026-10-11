@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;

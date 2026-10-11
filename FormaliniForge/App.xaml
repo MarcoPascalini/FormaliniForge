@@ -1,4 +1,5 @@
-﻿<Application x:Class="FormaliniForge.App"
+<!-- Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com); SPDX-License-Identifier: MIT -->
+<Application x:Class="FormaliniForge.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:FormaliniForge"

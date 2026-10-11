@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using System.Windows;
 using System.Windows.Input;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;

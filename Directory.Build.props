@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <Authors>Marco Irinel Pascalini</Authors>
+    <Company>Marco Irinel Pascalini</Company>
+    <Product>Formalini Forge</Product>
+    <Copyright>Copyright © 2026 Marco Irinel Pascalini</Copyright>
+    <PackageProjectUrl>https://formalini.com</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MarcoPascalini/FormaliniForge</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>

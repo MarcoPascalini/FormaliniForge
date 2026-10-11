@@ -1,24 +1,24 @@
-# VS Code: funcții populare și direcția Formalini Forge
+# VS Code usage and the Formalini Forge direction
 
-Analiză din 10 octombrie 2026. Numărul de instalări al extensiilor este un indicator de adopție, nu o măsură directă a utilizării zilnice.
+Research recorded on 10 October 2026. Extension installation counts indicate adoption, not daily use.
 
-## Ce folosesc dezvoltatorii
+## Common developer needs
 
-- [Stack Overflow Developer Survey 2025](https://survey.stackoverflow.co/2025/) indică VS Code drept unul dintre cele mai folosite medii de dezvoltare în rândul respondenților.
-- [Visual Studio Marketplace](https://marketplace.visualstudio.com/VSCode/) afișează printre extensiile foarte instalate Python, Pylance, Python Debugger, Jupyter și C/C++. Utilizatorii caută completare contextuală, erori în editor, depanare și unelte specifice limbajului. [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python), [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) și [C/C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) descriu aceste funcții; extensia C/C++ nu furnizează compilatorul.
-- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) formatează cod și fișiere de configurare; [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) marchează și poate repara probleme JavaScript/TypeScript. [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens) dezvoltă navigarea prin istoricul Git. [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) oferă previzualizare locală pentru site-uri.
-- [Documentația VS Code](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace) arată că descoperirea, instalarea, dezactivarea și recomandările de extensii sunt părți centrale ale fluxului de lucru.
+- The [Stack Overflow Developer Survey 2025](https://survey.stackoverflow.co/2025/) lists VS Code among the most used development environments by respondents.
+- The [Visual Studio Marketplace](https://marketplace.visualstudio.com/VSCode/) prominently features Python, Pylance, Python Debugger, Jupyter, and C/C++ extensions. Developers seek contextual completion, inline diagnostics, debugging, and language-specific tools. The [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python), [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance), and [C/C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) listings describe these features; the C/C++ extension does not include a compiler.
+- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) formats code and configuration files. [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) reports and can fix JavaScript and TypeScript problems. [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens) improves Git history navigation. [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) provides local website previews.
+- [VS Code documentation](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace) treats extension discovery, installation, disabling, and recommendations as core workflows.
 
-## Implementat acum în Formalini Forge
+## Available in Formalini Forge
 
-- Editor cu taburi, arbore de fișiere, căutare și înlocuire, colorare pentru limbajele deja suportate, completare simplă, Git local, Build/Run și jurnal de depanare.
-- Paletă de comenzi (`Ctrl+Shift+P`) pentru acțiunile principale și comenzile aduse de extensii.
-- Formatare locală JSON, XML și XAML (`Shift+Alt+F`).
-- Manager de extensii în meniul **Extensii**: instalare din ZIP, activare, dezactivare și eliminare. Extensiile v1 pot adăuga comenzi care introduc text și fragmente de cod cu declanșator, filtrate după extensia fișierului. Nu execută cod extern.
-- Contor local pentru cereri și tokenuri, cu buget opțional de tokenuri. Este citit din metadatele răspunsurilor API; nu reprezintă soldul financiar al contului.
+- Tabbed editor, file tree, search and replace, syntax highlighting for supported languages, basic completion, local Git, build and run actions, and diagnostic logs.
+- Command palette (`Ctrl+Shift+P`) for primary actions and extension commands.
+- Local JSON, XML, XAML, and HTML formatting (`Shift+Alt+F`).
+- Extensions manager: install ZIP packages, enable, disable, and remove them. V1 extensions add text-insertion commands and file-extension-filtered snippets; they do not execute external code.
+- Local AI request and token counter with an optional budget. It uses API response metadata and does not represent the account's financial balance.
 
-## Formatul extensiilor v1
+## V1 extension format
 
-Pachet ZIP cu `manifest.json` la rădăcină. `apiVersion` trebuie să fie `1`. Modelul complet se găsește în [`examples/hello-extension/manifest.json`](../examples/hello-extension/manifest.json). Arhiva este verificată înainte de instalare: număr de intrări, mărime și căi în afara folderului. Extensiile sunt dezactivate după instalare până când utilizatorul le activează. Folderul local este `%AppData%\FormaliniForge\Extensions`.
+Use a ZIP package with `manifest.json` at its root and `apiVersion` set to `1`. See the [example manifest](../examples/hello-extension/manifest.json). The installer checks the number of entries, size limits, and paths that would escape the extension folder. Extensions start disabled until the user enables them. The local directory is `%AppData%\FormaliniForge\Extensions`.
 
-Extensiile VS Code/VSIX nu sunt compatibile direct: ele folosesc [API-ul și hostul propriu VS Code](https://code.visualstudio.com/api/get-started/extension-anatomy). Pentru suport real la mai multe limbaje și depanare, etapele următoare ar trebui să integreze protocoalele LSP și DAP, analiza proiectelor, test discovery și un terminal. [Ghidul Language Server](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide) descrie baza pentru completare și diagnosticare între editoare.
+VS Code/VSIX packages are not directly compatible because they use [VS Code's own API and extension host](https://code.visualstudio.com/api/get-started/extension-anatomy). Broader language support and debugging would require LSP and DAP integration, project analysis, test discovery, and a terminal. The [Language Server guide](https://code.visualstudio.com/api/language-extensions/language-server-extension-guide) describes cross-editor completion and diagnostics.

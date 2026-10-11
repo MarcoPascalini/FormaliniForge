@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
@@ -70,13 +72,13 @@ public sealed class ExtensionCatalog
     {
         Directory.CreateDirectory(Root);
         using var archive = ZipFile.OpenRead(zipPath);
-        if (archive.Entries.Count is < 1 or > 256) throw new InvalidDataException("Arhiva extensiei are prea multe fișiere.");
-        var manifestEntry = archive.GetEntry("manifest.json") ?? throw new InvalidDataException("Lipsește manifest.json la rădăcina arhivei.");
-        if (manifestEntry.Length > 128_000) throw new InvalidDataException("Manifestul este prea mare.");
+        if (archive.Entries.Count is < 1 or > 256) throw new InvalidDataException("The extension archive has too many files.");
+        var manifestEntry = archive.GetEntry("manifest.json") ?? throw new InvalidDataException("manifest.json is missing from the archive root.");
+        if (manifestEntry.Length > 128_000) throw new InvalidDataException("The manifest is too large.");
         ForgeExtensionManifest manifest;
         using (var stream = manifestEntry.Open()) manifest = Validate(JsonSerializer.Deserialize<ForgeExtensionManifest>(stream, Json));
         var destination = Path.Combine(Root, manifest.Id);
-        if (Directory.Exists(destination)) throw new IOException("Extensia este deja instalată. Dezinstaleaz-o înainte de înlocuire.");
+        if (Directory.Exists(destination)) throw new IOException("The extension is already installed. Remove it before replacing it.");
         var stage = Path.Combine(Root, ".install-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(stage);
         try
@@ -86,19 +88,19 @@ public sealed class ExtensionCatalog
             foreach (var entry in archive.Entries)
             {
                 total += entry.Length;
-                if (entry.Length > 4_000_000 || total > 8_000_000) throw new InvalidDataException("Extensia depășește limita de 8 MB.");
+                if (entry.Length > 4_000_000 || total > 8_000_000) throw new InvalidDataException("The extension exceeds the 8 MB limit.");
                 var name = entry.FullName.Replace('/', Path.DirectorySeparatorChar);
-                if (name.Length == 0 || Path.IsPathRooted(name)) throw new InvalidDataException("Cale invalidă în arhivă.");
+                if (name.Length == 0 || Path.IsPathRooted(name)) throw new InvalidDataException("Invalid path in the archive.");
                 var target = Path.GetFullPath(Path.Combine(stage, name));
                 if (!target.StartsWith(stage + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException("Arhiva conține o cale în afara extensiei.");
-                if (!paths.Add(target)) throw new InvalidDataException("Arhiva conține căi duplicate.");
+                    throw new InvalidDataException("The archive contains a path outside the extension folder.");
+                if (!paths.Add(target)) throw new InvalidDataException("The archive contains duplicate paths.");
                 if (name.EndsWith(Path.DirectorySeparatorChar)) { Directory.CreateDirectory(target); continue; }
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 entry.ExtractToFile(target);
             }
             var extracted = ReadManifest(Path.Combine(stage, "manifest.json"));
-            if (extracted.Id != manifest.Id) throw new InvalidDataException("Manifestul instalat nu corespunde celui verificat.");
+            if (extracted.Id != manifest.Id) throw new InvalidDataException("The installed manifest does not match the verified manifest.");
             // Explicit enablement happens in the UI, after inspection of the manifest.
             Directory.Move(stage, destination);
         }
@@ -117,14 +119,14 @@ public sealed class ExtensionCatalog
     public void Remove(InstalledForgeExtension extension)
     {
         if (!Path.GetFullPath(extension.DirectoryPath).StartsWith(Root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Calea extensiei este în afara catalogului.");
+            throw new InvalidOperationException("The extension path is outside the catalog.");
         Directory.Delete(extension.DirectoryPath, true);
         Reload();
     }
 
     private static ForgeExtensionManifest ReadManifest(string path)
     {
-        if (new FileInfo(path).Length > 128_000) throw new InvalidDataException("Manifestul este prea mare.");
+        if (new FileInfo(path).Length > 128_000) throw new InvalidDataException("The manifest is too large.");
         return Validate(JsonSerializer.Deserialize<ForgeExtensionManifest>(File.ReadAllText(path), Json));
     }
 
@@ -132,10 +134,10 @@ public sealed class ExtensionCatalog
     {
         if (manifest == null || manifest.ApiVersion != 1 || !Regex.IsMatch(manifest.Id, "^[a-z][a-z0-9.-]{2,79}$") ||
             string.IsNullOrWhiteSpace(manifest.Name) || manifest.Name.Length > 100 || manifest.Commands.Count > 100 || manifest.Snippets.Count > 200)
-            throw new InvalidDataException("Manifestul extensiei este invalid sau versiunea API nu este suportată.");
+            throw new InvalidDataException("The extension manifest is invalid or its API version is unsupported.");
         if (manifest.Commands.Any(x => string.IsNullOrWhiteSpace(x.Title) || x.Title.Length > 120 || x.InsertText.Length > 100_000) ||
             manifest.Snippets.Any(x => !Regex.IsMatch(x.Trigger, "^[A-Za-z_][A-Za-z0-9_]{0,39}$") || x.Body.Length > 100_000))
-            throw new InvalidDataException("Comenzile sau fragmentele extensiei sunt invalide.");
+            throw new InvalidDataException("The extension commands or snippets are invalid.");
         return manifest;
     }
 }

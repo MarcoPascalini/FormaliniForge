@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -98,7 +100,7 @@ public partial class MainWindow
     {
         try
         {
-            var editor = CurrentEditor ?? throw new InvalidOperationException("Deschide mai întâi un fișier.");
+            var editor = CurrentEditor ?? throw new InvalidOperationException("Open a file first.");
             var path = (EditorTabs.SelectedItem as TabItem)?.Tag as string ?? "";
             var ext = Path.GetExtension(path).ToLowerInvariant();
             var formatted = ext switch
@@ -106,7 +108,7 @@ public partial class MainWindow
                 ".json" => JsonSerializer.Serialize(JsonDocument.Parse(editor.Text).RootElement, new JsonSerializerOptions { WriteIndented = true }),
                 ".xml" or ".xaml" or ".csproj" or ".vbproj" => System.Xml.Linq.XDocument.Parse(editor.Text).ToString(),
                 ".html" or ".htm" => FormatHtmlSource(editor.Text).TrimEnd(),
-                _ => throw new NotSupportedException("Formatarea locală este disponibilă acum pentru HTML, JSON, XML și XAML.")
+                _ => throw new NotSupportedException("Local formatting is currently available for HTML, JSON, XML, and XAML.")
             };
             editor.Document.Replace(0, editor.Document.TextLength, formatted + Environment.NewLine);
             Status("Document formatat.");

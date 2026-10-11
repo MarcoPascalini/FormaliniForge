@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using System.IO;
 using System.Windows;
 using MessageBox = System.Windows.MessageBox;
@@ -83,7 +85,7 @@ public partial class MainWindow
 
     private void About_Click(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show("Formalini Forge\nformalini.com\nDeveloper: Marco PASCALINI",
+        MessageBox.Show("Formalini Forge\nhttps://formalini.com\nAuthor: Marco Irinel Pascalini\nMIT License",
             T("Despre Formalini Forge"), MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }

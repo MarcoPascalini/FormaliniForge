@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.Net.Http;
@@ -130,7 +132,7 @@ internal sealed class WordCompletion : ICompletionData
     public System.Windows.Media.ImageSource? Image => null;
     public string Text { get; }
     public object Content => Text;
-    public object Description => "Sugestie locală";
+    public object Description => "Local suggestion";
     public double Priority => 0;
     public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs)
         => textArea.Document.Replace(completionSegment, Text);
@@ -159,7 +161,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         ProviderBox.SelectedIndex = 0;
-        Status("Editor pregătit. Poți crea și compila proiecte fără cheie AI.");
+        Status("Editor ready. You can create and build projects without an AI key.");
         RenderDesigner();
         Loaded += (_, _) => { InitializeToolWindows(); DecorateToolbox(); InitializeInspector(); LoadExtensions(); LoadUsage(); ApplyLanguage(); };
         Closing += MainWindow_Closing;
@@ -177,16 +179,16 @@ public partial class MainWindow : Window
         if (!offline && File.Exists(KeyFile))
         {
             try { ApiKeyBox.Password = Encoding.UTF8.GetString(ProtectedData.Unprotect(File.ReadAllBytes(KeyFile), null, DataProtectionScope.CurrentUser)); }
-            catch { Status("Cheia API salvată nu a putut fi citită."); }
+            catch { Status("The saved API key could not be read."); }
         }
-        if (offline) Status("Mod fără AI: editorul, designerul și compilarea sunt disponibile.");
+        if (offline) Status("No AI mode: editing, designing, and building are available.");
         RefreshCreditBalance();
     }
 
     private void Status(string message) => StatusText.Text = T(message);
     private void RequireProject()
     {
-        if (projectDir == null) throw new InvalidOperationException("Creează sau deschide mai întâi un proiect.");
+        if (projectDir == null) throw new InvalidOperationException("Create or open a project first.");
     }
     private void Error(Exception ex) { Status(ex.Message); MessageBox.Show(ex.Message, "Formalini Forge", MessageBoxButton.OK, MessageBoxImage.Warning); }
 
@@ -198,11 +200,11 @@ public partial class MainWindow : Window
             var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = T("Alege folderul pentru noul proiect"), UseDescriptionForTitle = true };
             if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
             var name = Microsoft.VisualBasic.Interaction.InputBox(T("Numele aplicației (litere, cifre și _):"), T("Proiect nou"), "MyApp").Trim();
-            if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[A-Za-z_][A-Za-z0-9_]*$")) throw new InvalidOperationException("Numele trebuie să înceapă cu o literă sau _ și să conțină doar litere, cifre sau _.");
+            if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[A-Za-z_][A-Za-z0-9_]*$")) throw new InvalidOperationException("The name must start with a letter or _ and contain only letters, digits, or _.");
             var language = ChooseProjectLanguage();
             if (language == null) return;
             var target = Path.Combine(dialog.SelectedPath, name);
-            if (Directory.Exists(target) && Directory.EnumerateFileSystemEntries(target).Any()) throw new InvalidOperationException("Folderul proiectului există și nu este gol.");
+            if (Directory.Exists(target) && Directory.EnumerateFileSystemEntries(target).Any()) throw new InvalidOperationException("The project folder already exists and is not empty.");
             projectDir = target;
             Directory.CreateDirectory(projectDir);
             state = new ProjectState { Name = name, Language = language, Items = language == "C#" ? new() { new DesignItem { Type = "TextBlock", Name = "title", Text = name, X = 28, Y = 25, Width = 500, Height = 36 } } : new() };
@@ -229,8 +231,8 @@ public partial class MainWindow : Window
     private void OpenProject(string path)
     {
         var statePath = Path.Combine(path, "forge.json");
-        if (!File.Exists(statePath)) throw new InvalidOperationException("Folderul nu conține forge.json.");
-        state = JsonSerializer.Deserialize<ProjectState>(File.ReadAllText(statePath), jsonOptions) ?? throw new InvalidOperationException("Proiect invalid.");
+        if (!File.Exists(statePath)) throw new InvalidOperationException("The folder does not contain forge.json.");
+        state = JsonSerializer.Deserialize<ProjectState>(File.ReadAllText(statePath), jsonOptions) ?? throw new InvalidOperationException("Invalid project.");
         projectDir = path;
         selected = null;
         activeWindow = "MainWindow";
@@ -388,11 +390,11 @@ public partial class MainWindow : Window
         var start = editor.SelectionStart + editor.SelectionLength;
         var index = editor.Text.IndexOf(query, Math.Min(start, editor.Text.Length), StringComparison.OrdinalIgnoreCase);
         if (index < 0) index = editor.Text.IndexOf(query, StringComparison.OrdinalIgnoreCase);
-        if (index < 0) { Status("Textul nu a fost găsit."); return; }
+        if (index < 0) { Status("Text not found."); return; }
         editor.Select(index, query.Length);
         editor.ScrollToLine(editor.Document.GetLineByOffset(index).LineNumber);
         editor.Focus();
-        Status("Găsit la linia " + editor.Document.GetLineByOffset(index).LineNumber);
+        Status("Found at line " + editor.Document.GetLineByOffset(index).LineNumber);
     }
     private void Replace_Click(object sender, RoutedEventArgs e)
     {
@@ -408,7 +410,7 @@ public partial class MainWindow : Window
         if (editor == null || FindBox.Text.Length == 0) return;
         var count = Regex.Matches(editor.Text, Regex.Escape(FindBox.Text), RegexOptions.IgnoreCase).Count;
         editor.Text = editor.Text.Replace(FindBox.Text, ReplaceBox.Text, StringComparison.OrdinalIgnoreCase);
-        Status(count + " apariții înlocuite în fișierul curent.");
+        Status(count + " occurrences replaced in the current file.");
     }
     private void SearchProject_Click(object sender, RoutedEventArgs e)
     {
@@ -438,9 +440,9 @@ public partial class MainWindow : Window
                 catch (IOException) { }
                 if (lines.Count >= 200) break;
             }
-            BuildOutput.Text = lines.Count == 0 ? "Nu am găsit rezultate." : string.Join(Environment.NewLine, lines);
+            BuildOutput.Text = lines.Count == 0 ? "No results found." : string.Join(Environment.NewLine, lines);
             MainTabs.SelectedIndex = 2;
-            Status(lines.Count + " rezultate găsite.");
+            Status(lines.Count + " results found.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -480,9 +482,9 @@ public partial class MainWindow : Window
         {
             Toolbox.IsEnabled = false;
             var welcome = new StackPanel { Width = 540 };
-            welcome.Children.Add(new TextBlock { Text = "Construiește o aplicație Windows", FontSize = 29, FontWeight = FontWeights.SemiBold, Foreground = Brushes.Black, TextWrapping = TextWrapping.Wrap });
-            welcome.Children.Add(new TextBlock { Text = "Descrie aplicația pe care o vrei. Pentru Hello World nu ai nevoie de cod sau de o cheie AI.", FontSize = 16, Foreground = Brushes.DimGray, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 15, 0, 0) });
-            var quickStart = new Button { Content = "Creează din descriere", Width = 220, Margin = new Thickness(0, 22, 0, 0), HorizontalAlignment = System.Windows.HorizontalAlignment.Left };
+            welcome.Children.Add(new TextBlock { Text = "Build a Windows application", FontSize = 29, FontWeight = FontWeights.SemiBold, Foreground = Brushes.Black, TextWrapping = TextWrapping.Wrap });
+            welcome.Children.Add(new TextBlock { Text = "Describe the application you want. Hello World needs no code or AI key.", FontSize = 16, Foreground = Brushes.DimGray, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 15, 0, 0) });
+            var quickStart = new Button { Content = "Create from description", Width = 220, Margin = new Thickness(0, 22, 0, 0), HorizontalAlignment = System.Windows.HorizontalAlignment.Left };
             quickStart.Click += QuickStart_Click;
             welcome.Children.Add(quickStart);
             Canvas.SetLeft(welcome, 85); Canvas.SetTop(welcome, 135);
@@ -652,10 +654,10 @@ public partial class MainWindow : Window
         try
         {
             RequireProject();
-            if (state.Language != "C#") throw new InvalidOperationException("Designerul cu mai multe ferestre este disponibil acum pentru C#/WPF.");
-            var name = Microsoft.VisualBasic.Interaction.InputBox("Numele ferestrei:", "Fereastră nouă", "SecondWindow").Trim();
+            if (state.Language != "C#") throw new InvalidOperationException("The multi-window designer is currently available for C#/WPF.");
+            var name = Microsoft.VisualBasic.Interaction.InputBox("Window name:", "New window", "SecondWindow").Trim();
             if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[A-Za-z_][A-Za-z0-9_]*$") || name == "MainWindow" || state.Windows.ContainsKey(name))
-                throw new InvalidOperationException("Alege un nume unic, format din litere, cifre și _.");
+                throw new InvalidOperationException("Choose a unique name using letters, digits, and _.");
             Snapshot();
             state.Windows[name] = new List<DesignItem>();
             WindowBox.Items.Add(name);
@@ -703,7 +705,7 @@ public partial class MainWindow : Window
     }
     private void SaveConnection_Click(object sender, RoutedEventArgs e)
     {
-        try { RequireProject(); Snapshot(); state.ConnectionString = ConnectionBox.Text; SaveProject(); Status("Conexiune salvată în proiect. Nu include parole aici."); }
+        try { RequireProject(); Snapshot(); state.ConnectionString = ConnectionBox.Text; SaveProject(); Status("Connection saved in the project. Do not include passwords here."); }
         catch (Exception ex) { Error(ex); }
     }
     private void ChooseDatabase_Click(object sender, RoutedEventArgs e)
@@ -711,8 +713,8 @@ public partial class MainWindow : Window
         try
         {
             RequireProject();
-            if (state.Language != "C#") throw new InvalidOperationException("Legarea vizuală SQLite este disponibilă pentru proiectele C#/WPF.");
-            var picker = new Microsoft.Win32.OpenFileDialog { Title = "Alege o bază SQLite", Filter = "SQLite|*.db;*.sqlite;*.sqlite3|Toate fișierele|*.*" };
+            if (state.Language != "C#") throw new InvalidOperationException("Visual SQLite binding is available for C#/WPF projects.");
+            var picker = new Microsoft.Win32.OpenFileDialog { Title = "Choose a SQLite database", Filter = "SQLite|*.db;*.sqlite;*.sqlite3|All files|*.*" };
             if (picker.ShowDialog() != true) return;
             Snapshot();
             var directory = Path.Combine(projectDir!, "App", "Data");
@@ -733,7 +735,7 @@ public partial class MainWindow : Window
             RequireProject();
             var db = Path.GetFullPath(Path.Combine(projectDir!, "App", state.DatabaseFile));
             if (!db.StartsWith(Path.GetFullPath(Path.Combine(projectDir!, "App")) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || !File.Exists(db))
-                throw new InvalidOperationException("Alege mai întâi o bază SQLite din proiect.");
+                throw new InvalidOperationException("Choose a SQLite database from the project first.");
             DatabaseTablesBox.Items.Clear();
             using var connection = new SqliteConnection("Data Source=" + db + ";Mode=ReadOnly");
             connection.Open();
@@ -742,7 +744,7 @@ public partial class MainWindow : Window
             using var reader = command.ExecuteReader();
             while (reader.Read()) DatabaseTablesBox.Items.Add(reader.GetString(0));
             if (DatabaseTablesBox.Items.Count > 0) DatabaseTablesBox.SelectedIndex = 0;
-            Status(DatabaseTablesBox.Items.Count + " tabele găsite.");
+            Status(DatabaseTablesBox.Items.Count + " tables found.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -751,12 +753,12 @@ public partial class MainWindow : Window
         try
         {
             RequireProject();
-            if (selected?.Type != "DataGrid") throw new InvalidOperationException("Selectează un DataGrid din designer.");
-            if (DatabaseTablesBox.SelectedItem is not string table) throw new InvalidOperationException("Alege un tabel SQLite.");
+            if (selected?.Type != "DataGrid") throw new InvalidOperationException("Select a DataGrid in the designer.");
+            if (DatabaseTablesBox.SelectedItem is not string table) throw new InvalidOperationException("Choose a SQLite table.");
             Snapshot();
             selected.DataTable = table;
             GenerateApp(); SaveProject();
-            Status("DataGrid-ul va afișa tabelul " + table + " la pornirea aplicației.");
+            Status("The DataGrid will display table " + table + " when the application starts.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -765,10 +767,10 @@ public partial class MainWindow : Window
         try
         {
             if (Provider == "Fără AI") return;
-            if (ApiKeyBox.Password.Trim().Length == 0) throw new InvalidOperationException("Introdu o cheie API înainte de salvare.");
+            if (ApiKeyBox.Password.Trim().Length == 0) throw new InvalidOperationException("Enter an API key before saving.");
             Directory.CreateDirectory(Path.GetDirectoryName(KeyFile)!);
             File.WriteAllBytes(KeyFile, ProtectedData.Protect(Encoding.UTF8.GetBytes(ApiKeyBox.Password.Trim()), null, DataProtectionScope.CurrentUser));
-            Status("Cheia " + Provider + " a fost salvată în profilul Windows.");
+            Status("The " + Provider + " key was saved in the Windows profile.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -800,14 +802,14 @@ public partial class MainWindow : Window
         try
         {
             RequireProject();
-            if (!Directory.Exists(HistoryDir)) throw new InvalidOperationException("Nu există versiuni anterioare.");
+            if (!Directory.Exists(HistoryDir)) throw new InvalidOperationException("There are no earlier versions.");
             var last = Directory.EnumerateDirectories(HistoryDir).OrderByDescending(x => x).FirstOrDefault();
-            if (last == null) throw new InvalidOperationException("Nu există versiuni anterioare.");
+            if (last == null) throw new InvalidOperationException("There are no earlier versions.");
             CopyProject(last, projectDir!);
             Directory.Delete(last, true);
             CloseAllEditors();
             OpenProject(projectDir!);
-            Status("Versiunea anterioară a fost restaurată.");
+            Status("Previous version restored.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -817,9 +819,9 @@ public partial class MainWindow : Window
         {
             RequireProject();
             var snapshots = Directory.Exists(HistoryDir) ? Directory.EnumerateDirectories(HistoryDir).OrderByDescending(x => x).Take(20).ToList() : new();
-            if (snapshots.Count == 0) throw new InvalidOperationException("Nu există încă versiuni salvate.");
+            if (snapshots.Count == 0) throw new InvalidOperationException("There are no saved versions yet.");
             var list = string.Join("\n", snapshots.Select((p, i) => $"{i + 1}. {Path.GetFileName(p)}"));
-            var answer = Microsoft.VisualBasic.Interaction.InputBox("Alege numărul versiunii:\n" + list, "Istoricul proiectului", "1");
+            var answer = Microsoft.VisualBasic.Interaction.InputBox("Choose the version number:\n" + list, "Project history", "1");
             if (!int.TryParse(answer, out var index) || index < 1 || index > snapshots.Count) return;
             Snapshot();
             foreach (var file in Directory.EnumerateFiles(projectDir!, "*", SearchOption.AllDirectories))
@@ -833,7 +835,7 @@ public partial class MainWindow : Window
             CopyProject(snapshots[index - 1], projectDir!);
             CloseAllEditors();
             OpenProject(projectDir!);
-            Status("Versiunea selectată a fost restaurată.");
+            Status("Selected version restored.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -842,7 +844,7 @@ public partial class MainWindow : Window
         try
         {
             RequireProject();
-            var git = FindTool("git.exe") ?? throw new InvalidOperationException("Instalează Git pentru a folosi această funcție.");
+            var git = FindTool("git.exe") ?? throw new InvalidOperationException("Install Git to use this feature.");
             if (!Directory.Exists(Path.Combine(projectDir!, ".git")))
             {
                 var init = new ProcessStartInfo(git) { WorkingDirectory = projectDir!, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
@@ -858,8 +860,8 @@ public partial class MainWindow : Window
             var output = await statusProcess.StandardOutput.ReadToEndAsync();
             await statusProcess.WaitForExitAsync();
             MainTabs.SelectedIndex = 2;
-            BuildOutput.Text = "Git status:\n" + (output.Length == 0 ? "Nu există modificări." : output);
-            Status("Repository Git pregătit. Pentru GitHub, adaugă o adresă remote.");
+            BuildOutput.Text = "Git status:\n" + (output.Length == 0 ? "There are no changes." : output);
+            Status("Git repository ready. Add a remote URL for GitHub.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -868,20 +870,20 @@ public partial class MainWindow : Window
         try
         {
             RequireProject();
-            var git = FindTool("git.exe") ?? throw new InvalidOperationException("Instalează Git.");
+            var git = FindTool("git.exe") ?? throw new InvalidOperationException("Install Git.");
             if (!Directory.Exists(Path.Combine(projectDir!, ".git")))
             {
                 var init = new ProcessStartInfo(git) { WorkingDirectory = projectDir!, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
                 init.ArgumentList.Add("init");
                 using var initProcess = Process.Start(init)!;
                 await initProcess.WaitForExitAsync();
-                if (initProcess.ExitCode != 0) throw new InvalidOperationException("Nu am putut inițializa repository-ul Git.");
+                if (initProcess.ExitCode != 0) throw new InvalidOperationException("Could not initialize the Git repository.");
                 File.WriteAllText(Path.Combine(projectDir!, ".gitignore"), "bin/\nobj/\npublish/\npublish-debug/\n.forge-history/\n");
             }
             var url = Microsoft.VisualBasic.Interaction.InputBox("Adresa repository-ului GitHub (HTTPS sau SSH):", "Conectare GitHub", "").Trim();
             if (url.Length == 0) return;
             if (!(url.StartsWith("https://github.com/", StringComparison.OrdinalIgnoreCase) || url.StartsWith("git@github.com:", StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Introdu o adresă GitHub HTTPS sau SSH validă.");
+                throw new InvalidOperationException("Enter a valid GitHub HTTPS or SSH URL.");
             var get = new ProcessStartInfo(git) { WorkingDirectory = projectDir!, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
             get.ArgumentList.Add("remote"); get.ArgumentList.Add("get-url"); get.ArgumentList.Add("origin");
             using var getProcess = Process.Start(get)!;
@@ -895,14 +897,14 @@ public partial class MainWindow : Window
             var error = process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
             if (process.ExitCode != 0) throw new InvalidOperationException(await error);
-            Status("GitHub conectat ca origin. Folosește Git pentru status.");
+            Status("GitHub connected as origin. Use Git for status.");
         }
         catch (Exception ex) { Error(ex); }
     }
     private async Task<string> RunGit(params string[] arguments)
     {
         RequireProject();
-        var git = FindTool("git.exe") ?? throw new InvalidOperationException("Instalează Git pentru a folosi GitHub.");
+        var git = FindTool("git.exe") ?? throw new InvalidOperationException("Install Git to use GitHub.");
         var psi = new ProcessStartInfo(git) { WorkingDirectory = projectDir!, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
         foreach (var argument in arguments) psi.ArgumentList.Add(argument);
         using var process = Process.Start(psi) ?? throw new InvalidOperationException("Git nu a pornit.");
@@ -918,8 +920,8 @@ public partial class MainWindow : Window
         try
         {
             SaveProject();
-            if (!Directory.Exists(Path.Combine(projectDir!, ".git"))) throw new InvalidOperationException("Inițializează mai întâi Git din meniu.");
-            var message = Microsoft.VisualBasic.Interaction.InputBox("Descrie schimbarea:", "Commit", "").Trim();
+            if (!Directory.Exists(Path.Combine(projectDir!, ".git"))) throw new InvalidOperationException("Initialize Git from the menu first.");
+            var message = Microsoft.VisualBasic.Interaction.InputBox("Describe the change:", "Commit", "").Trim();
             if (message.Length == 0) return;
             await RunGit("add", "-A");
             BuildOutput.Text = await RunGit("commit", "-m", message);
@@ -934,7 +936,7 @@ public partial class MainWindow : Window
         {
             BuildOutput.Text = await RunGit("push", "-u", "origin", "HEAD");
             MainTabs.SelectedIndex = 2;
-            Status("Modificările au fost trimise la GitHub.");
+            Status("Changes pushed to GitHub.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -956,16 +958,16 @@ public partial class MainWindow : Window
         try
         {
             RequireProject();
-            if (state.Language != "C#") throw new InvalidOperationException("Installerul de dependențe externe este disponibil acum pentru aplicațiile C#/WPF.");
-            var list = state.Dependencies.Count == 0 ? "Nu sunt dependențe externe declarate." : string.Join("\n", state.Dependencies.Select(x => "• " + x.Name + " → " + x.ProbePath));
-            if (MessageBox.Show(list + "\n\nAdaugi o dependență cu installer local?", "Dependențe", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
-            var name = Microsoft.VisualBasic.Interaction.InputBox("Numele dependenței:", "Dependență nouă", "").Trim();
+            if (state.Language != "C#") throw new InvalidOperationException("The external dependency installer is currently available for C#/WPF applications.");
+            var list = state.Dependencies.Count == 0 ? "No external dependencies declared." : string.Join("\n", state.Dependencies.Select(x => "• " + x.Name + " → " + x.ProbePath));
+            if (MessageBox.Show(list + "\n\nAdd a dependency with a local installer?", "Dependencies", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+            var name = Microsoft.VisualBasic.Interaction.InputBox("Dependency name:", "New dependency", "").Trim();
             if (name.Length == 0) return;
-            var probe = Microsoft.VisualBasic.Interaction.InputBox("Calea fișierului care dovedește că este instalată (poate folosi %ProgramFiles%):", "Verificare instalare", "").Trim();
-            if (probe.Length == 0) throw new InvalidOperationException("Este necesară o cale de verificare.");
-            var picker = new Microsoft.Win32.OpenFileDialog { Title = "Alege installerul care va fi inclus în aplicație", Filter = "Installere|*.exe;*.msi|Toate fișierele|*.*" };
+            var probe = Microsoft.VisualBasic.Interaction.InputBox("Path to a file that confirms installation (may use %ProgramFiles%):", "Installation check", "").Trim();
+            if (probe.Length == 0) throw new InvalidOperationException("A verification path is required.");
+            var picker = new Microsoft.Win32.OpenFileDialog { Title = "Choose the installer to include in the application", Filter = "Installers|*.exe;*.msi|All files|*.*" };
             if (picker.ShowDialog() != true) return;
-            var args = Microsoft.VisualBasic.Interaction.InputBox("Argumentele installerului (opțional):", "Argumente instalare", "").Trim();
+            var args = Microsoft.VisualBasic.Interaction.InputBox("Installer arguments (optional):", "Installation arguments", "").Trim();
             Snapshot();
             var hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(picker.FileName)));
             var filename = hash[..12] + "-" + Path.GetFileName(picker.FileName);
@@ -974,7 +976,7 @@ public partial class MainWindow : Window
             File.Copy(picker.FileName, Path.Combine(targetDir, filename), true);
             state.Dependencies.Add(new ExternalDependency { Name = name, ProbePath = probe, InstallerFile = filename, Sha256 = hash, Arguments = args });
             GenerateApp(); SaveProject();
-            Status("Installerul a fost inclus în pachet; aplicația îl verifică la pornire.");
+            Status("The installer was included in the package; the application checks it on startup.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -1099,11 +1101,11 @@ internal static class DependencyBootstrap
                 var probe = Environment.ExpandEnvironmentVariables(entry.ProbePath);
                 if (!Path.IsPathRooted(probe)) probe = Path.Combine(AppContext.BaseDirectory, probe);
                 if (File.Exists(probe)) continue;
-                if (MessageBox.Show(entry.Name + " lipsește. Instalezi acum dependența inclusă în aplicație?", "Dependență necesară", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return false;
+                if (MessageBox.Show(entry.Name + " is missing. Install the dependency included with the application now?", "Required dependency", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return false;
                 var installer = Path.Combine(AppContext.BaseDirectory, "Prerequisites", entry.InstallerFile);
-                if (!File.Exists(installer)) throw new InvalidOperationException("Installerul inclus lipsește: " + entry.InstallerFile);
+                if (!File.Exists(installer)) throw new InvalidOperationException("The bundled installer is missing: " + entry.InstallerFile);
                 var actual = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(installer)));
-                if (!actual.Equals(entry.Sha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Verificarea integrității installerului a eșuat.");
+                if (!actual.Equals(entry.Sha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Installer integrity verification failed.");
                 var msi = installer.EndsWith(".msi", StringComparison.OrdinalIgnoreCase);
                 var psi = new ProcessStartInfo(msi ? "msiexec.exe" : installer)
                 {
@@ -1112,13 +1114,13 @@ internal static class DependencyBootstrap
                 };
                 using var process = Process.Start(psi) ?? throw new InvalidOperationException("Installerul nu a pornit.");
                 process.WaitForExit();
-                if (process.ExitCode != 0 || !File.Exists(probe)) throw new InvalidOperationException("Instalarea nu a fost confirmată: " + entry.Name);
+                if (process.ExitCode != 0 || !File.Exists(probe)) throw new InvalidOperationException("Installation was not confirmed: " + entry.Name);
             }
             return true;
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Dependențe", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, "Dependencies", MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
     }
@@ -1235,7 +1237,7 @@ internal static class DependencyBootstrap
         var psi = new ProcessStartInfo { WorkingDirectory = projectDir!, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
         if (state.Language is "C#" or "VB")
         {
-            psi.FileName = FindTool("dotnet.exe") ?? throw new InvalidOperationException("Instalează .NET SDK 8 pentru a construi aplicația.");
+            psi.FileName = FindTool("dotnet.exe") ?? throw new InvalidOperationException("Install .NET SDK 8 to build the application.");
             psi.ArgumentList.Add("publish"); psi.ArgumentList.Add(Path.Combine(projectDir!, "App", state.Name + (state.Language == "VB" ? ".vbproj" : ".csproj")));
             psi.ArgumentList.Add("-c"); psi.ArgumentList.Add(debug ? "Debug" : "Release"); psi.ArgumentList.Add("-r"); psi.ArgumentList.Add("win-x64");
             psi.ArgumentList.Add("--self-contained"); psi.ArgumentList.Add("true");
@@ -1250,7 +1252,7 @@ internal static class DependencyBootstrap
             var exe = Path.Combine(output, state.Name + ".exe");
             if (state.Language == "Pascal")
             {
-                psi.FileName = FindTool("fpc.exe") ?? throw new InvalidOperationException("Pentru Pascal instalează Free Pascal și adaugă fpc.exe în PATH.");
+                psi.FileName = FindTool("fpc.exe") ?? throw new InvalidOperationException("For Pascal, install Free Pascal and add fpc.exe to PATH.");
                 psi.ArgumentList.Add(source); psi.ArgumentList.Add("-o" + exe);
             }
             else
@@ -1259,7 +1261,7 @@ internal static class DependencyBootstrap
                 if (compiler == null)
                 {
                     if (!await ConfigureMsvc(psi, source, exe, debug))
-                        throw new InvalidOperationException("Pentru C/C++ instalează Visual Studio Build Tools, GCC sau Clang.");
+                        throw new InvalidOperationException("For C/C++, install Visual Studio Build Tools, GCC, or Clang.");
                 }
                 else
                 {
@@ -1278,7 +1280,7 @@ internal static class DependencyBootstrap
         lastBuiltExe = process.ExitCode == 0 ? Path.Combine(output, state.Name + ".exe") : null;
         RunStatus.Text = lastBuiltExe == null ? (english ? "Build failed" : "Compilare eșuată") : (english ? "Build succeeded" : "Compilare reușită");
         AppendBuildLine("Build exited with code " + process.ExitCode + ".");
-        Status(lastBuiltExe == null ? "Compilarea a eșuat. Vezi jurnalul." : "EXE creat: " + lastBuiltExe);
+        Status(lastBuiltExe == null ? "Build failed. See the log." : "EXE created: " + lastBuiltExe);
         return lastBuiltExe != null;
     }
     private async void Build_Click(object sender, RoutedEventArgs e)
@@ -1310,10 +1312,10 @@ internal static class DependencyBootstrap
         try
         {
             RequireProject();
-            if (state.Language != "C#") throw new InvalidOperationException("Pentru acest limbaj, cere agentului să creeze un proiect de teste și configurează rularea lui.");
+            if (state.Language != "C#") throw new InvalidOperationException("For this language, ask the agent to create a test project and configure how to run it.");
             var testProjects = Directory.EnumerateFiles(projectDir!, "*Tests.csproj", SearchOption.AllDirectories).Where(p => !p.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar)).ToList();
-            if (testProjects.Count == 0) throw new InvalidOperationException("Nu există încă proiect de teste. Cere agentului: «Creează teste unitare pentru aplicație».");
-            SaveProject(); MainTabs.SelectedIndex = 2; BuildOutput.Text = "Rulez testele...\n";
+            if (testProjects.Count == 0) throw new InvalidOperationException("There is no test project yet. Ask the agent to create unit tests for the application.");
+            SaveProject(); MainTabs.SelectedIndex = 2; BuildOutput.Text = "Running tests...\n";
             foreach (var testProject in testProjects)
             {
                 var psi = new ProcessStartInfo(FindTool("dotnet.exe") ?? "dotnet") { WorkingDirectory = projectDir!, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
@@ -1322,9 +1324,9 @@ internal static class DependencyBootstrap
                 var stdout = process.StandardOutput.ReadToEndAsync(); var stderr = process.StandardError.ReadToEndAsync();
                 await process.WaitForExitAsync();
                 BuildOutput.Text += await stdout + await stderr;
-                if (process.ExitCode != 0) { Status("Unele teste au eșuat."); return; }
+                if (process.ExitCode != 0) { Status("Some tests failed."); return; }
             }
-            Status("Testele au trecut.");
+            Status("Tests passed.");
         }
         catch (Exception ex) { Error(ex); }
     }
@@ -1332,10 +1334,10 @@ internal static class DependencyBootstrap
     {
         if (string.IsNullOrWhiteSpace(BuildOutput.Text))
         {
-            Status("Rulează mai întâi Construiește EXE sau Testează pentru a obține un jurnal.");
+            Status("Run Build EXE or Test first to get a log.");
             return;
         }
-        PromptBox.Text = "Analizează următoarea eroare de build sau test, repară fișierele relevante și explică modificarea. Nu modifica fișiere fără legătură.\n\n" + BuildOutput.Text[^Math.Min(BuildOutput.Text.Length, 7000)..];
+        PromptBox.Text = "Analyze the following build or test error, fix the relevant files, and explain the change. Do not modify unrelated files.\n\n" + BuildOutput.Text[^Math.Min(BuildOutput.Text.Length, 7000)..];
         SendPrompt_Click(sender, e);
     }
     private void Dictation_Click(object sender, RoutedEventArgs e)
@@ -1347,12 +1349,12 @@ internal static class DependencyBootstrap
                 speechEngine.RecognizeAsyncCancel();
                 speechEngine.Dispose();
                 speechEngine = null;
-                DictationButton.Content = "🎙 Dictează";
-                Status("Dictarea s-a oprit.");
+                DictationButton.Content = "🎙 Dictate";
+                Status("Dictation stopped.");
                 return;
             }
             var recognizer = SpeechRecognitionEngine.InstalledRecognizers().FirstOrDefault()
-                ?? throw new InvalidOperationException("Windows nu are un pachet de recunoaștere vocală instalat.");
+                ?? throw new InvalidOperationException("Windows does not have a speech recognition pack installed.");
             speechEngine = new SpeechRecognitionEngine(recognizer);
             speechEngine.LoadGrammar(new DictationGrammar());
             speechEngine.SetInputToDefaultAudioDevice();
@@ -1362,8 +1364,8 @@ internal static class DependencyBootstrap
                 Dispatcher.BeginInvoke(() => PromptBox.Text += (PromptBox.Text.EndsWith(' ') || PromptBox.Text.Length == 0 ? "" : " ") + args.Result.Text);
             };
             speechEngine.RecognizeAsync(RecognizeMode.Multiple);
-            DictationButton.Content = "■ Oprește dictarea";
-            Status("Dictarea este activă.");
+            DictationButton.Content = "■ Stop dictation";
+            Status("Dictation is active.");
         }
         catch (Exception ex) { speechEngine?.Dispose(); speechEngine = null; Error(ex); }
     }
@@ -1375,14 +1377,14 @@ internal static class DependencyBootstrap
             RequireProject();
             var prompt = PromptBox.Text.Trim();
             if (prompt.Length == 0) return;
-            if (Provider == "Fără AI") throw new InvalidOperationException("Agentul AI este oprit. Alege OpenAI sau Gemini în Setări dacă vrei să îl folosești.");
+            if (Provider == "Fără AI") throw new InvalidOperationException("The AI agent is off. Choose OpenAI or Gemini in Settings to use it.");
             var key = ApiKeyBox.Password.Trim();
-            if (key.Length == 0) throw new InvalidOperationException("Introdu cheia API pentru " + Provider + " în Setări.");
+            if (key.Length == 0) throw new InvalidOperationException("Enter the API key for " + Provider + " in Settings.");
             var model = ModelBox.Text.Trim();
-            if (model.Length == 0) throw new InvalidOperationException("Introdu numele modelului API.");
+            if (model.Length == 0) throw new InvalidOperationException("Enter the API model name.");
             PromptBox.IsEnabled = false;
-            ChatLog.AppendText("\nTU: " + prompt + "\n");
-            Status("Agentul analizează proiectul...");
+            ChatLog.AppendText("\nYOU: " + prompt + "\n");
+            Status("The agent is analyzing the project...");
             SaveProject();
             var files = EnumerateProjectSourceFiles(projectDir!)
                 .Where(p => new FileInfo(p).Length < 100_000).Take(30)
@@ -1441,18 +1443,18 @@ You are an AI agent inside an application builder. Return ONLY JSON with fields 
                 {
                     var rel = file.GetProperty("path").GetString() ?? "";
                     if (pendingAiTarget != null && !rel.Replace('\\', '/').Equals(pendingAiTarget, StringComparison.OrdinalIgnoreCase))
-                        throw new InvalidOperationException("Agentul a propus un fișier diferit de cel selectat: " + rel);
+                        throw new InvalidOperationException("The agent proposed a different file from the one selected: " + rel);
                     var full = Path.GetFullPath(Path.Combine(projectDir!, rel));
                     if (!full.StartsWith(Path.GetFullPath(projectDir!) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
                         rel.Replace('\\', '/').Split('/').Any(part => part is ".forge-history" or ".git" or "bin" or "obj" or "publish" or "publish-debug" or "node_modules" or "dist" or ".expo" or ".forge-npm-cache") ||
                         rel.Equals("forge.json", StringComparison.OrdinalIgnoreCase) || rel.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase) || rel.EndsWith(".vbproj", StringComparison.OrdinalIgnoreCase) || rel.EndsWith("App.xaml", StringComparison.OrdinalIgnoreCase) || rel.EndsWith("App.xaml.cs", StringComparison.OrdinalIgnoreCase))
-                        throw new InvalidOperationException("Agentul a propus o cale de fișier nepermisă: " + rel);
+                        throw new InvalidOperationException("The agent proposed a disallowed file path: " + rel);
                     Directory.CreateDirectory(Path.GetDirectoryName(full)!);
                     File.WriteAllText(full, file.GetProperty("content").GetString() ?? "");
                 }
             if (root.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
             {
-                if (pendingAiTarget != null) throw new InvalidOperationException("Agentul a propus schimbări de formular în locul fișierului selectat.");
+                if (pendingAiTarget != null) throw new InvalidOperationException("The agent proposed form changes instead of the selected file.");
                 var updated = JsonSerializer.Deserialize<List<DesignItem>>(items.GetRawText(), jsonOptions) ?? new();
                 foreach (var item in updated)
                     if ((item.Events == null || item.Events.Count == 0) && CurrentItems.FirstOrDefault(old => old.Name == item.Name) is { } oldItem)
@@ -1465,10 +1467,10 @@ You are an AI agent inside an application builder. Return ONLY JSON with fields 
             CloseAllEditors();
             SaveProject(); RenderDesigner(); RefreshFiles();
             if (reopenTarget != null && File.Exists(reopenTarget)) OpenEditor(reopenTarget);
-            ChatLog.AppendText("\nAGENT: " + (root.TryGetProperty("message", out var m) ? m.GetString() : "Modificări aplicate.") + "\n");
-            PromptBox.Text = ""; Status("Modificările au fost aplicate. Poți folosi Revino.");
+            ChatLog.AppendText("\nAGENT: " + (root.TryGetProperty("message", out var m) ? m.GetString() : "Changes applied.") + "\n");
+            PromptBox.Text = ""; Status("Changes applied. You can use Undo.");
         }
-        catch (Exception ex) { Error(ex); ChatLog.AppendText("\nEROARE: " + ex.Message + "\n"); }
+        catch (Exception ex) { Error(ex); ChatLog.AppendText("\nERROR: " + ex.Message + "\n"); }
         finally { PromptBox.IsEnabled = true; pendingAiTarget = null; }
     }
 }

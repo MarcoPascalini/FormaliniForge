@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -166,23 +168,23 @@ public partial class MainWindow
         }
         if (onComponent)
         {
-            Add("Proprietăți", "", FocusProperties);
-            Add(state.Language == "C#" ? "Editează evenimentele" : "Deschide codul generat", "Dublu clic", () => { if (selected != null) { if (state.Language == "C#") OpenComponentEvents(selected); else OpenEditor(NativeUiSource); } });
+            Add("Properties", "", FocusProperties);
+            Add(state.Language == "C#" ? "Edit events" : "Open generated code", "Double-click", () => { if (selected != null) { if (state.Language == "C#") OpenComponentEvents(selected); else OpenEditor(NativeUiSource); } });
             menu.Items.Add(new Separator());
-            Add("Decupează", "Ctrl+X", CutComponent);
-            Add("Copiază", "Ctrl+C", CopyComponent);
-            Add("Duplică", "Ctrl+D", DuplicateComponent);
+            Add("Cut", "Ctrl+X", CutComponent);
+            Add("Copy", "Ctrl+C", CopyComponent);
+            Add("Duplicate", "Ctrl+D", DuplicateComponent);
         }
-        Add("Lipește", "Ctrl+V", PasteComponent, componentClipboard != null);
+        Add("Paste", "Ctrl+V", PasteComponent, componentClipboard != null);
         if (onComponent)
         {
             menu.Items.Add(new Separator());
-            Add("Adu în față", "", () => ChangeComponentOrder(true));
-            Add("Trimite în spate", "", () => ChangeComponentOrder(false));
-            Add("Aliniază la grila de 8 px", "", SnapSelectedToGrid);
-            Add("Șterge", "Del", DeleteSelectedComponent);
+            Add("Bring to front", "", () => ChangeComponentOrder(true));
+            Add("Send to back", "", () => ChangeComponentOrder(false));
+            Add("Snap to 8 px grid", "", SnapSelectedToGrid);
+            Add("Delete", "Del", DeleteSelectedComponent);
         }
-        else Add("Proprietățile formularului", "", FocusProperties);
+        else Add("Form properties", "", FocusProperties);
         menu.IsOpen = true;
     }
 
@@ -204,7 +206,7 @@ public partial class MainWindow
     {
         if (selected == null) return;
         componentClipboard = CloneComponent(selected);
-        Status("Componenta a fost copiată. Folosește Ctrl+V pentru lipire.");
+        Status("Component copied. Use Ctrl+V to paste.");
     }
 
     private void CutComponent()
@@ -230,7 +232,7 @@ public partial class MainWindow
         CurrentItems.Add(item);
         selected = item;
         RenderDesigner(); ShowProperties(); GenerateApp(); SaveProject();
-        Status("Componenta a fost lipită.");
+        Status("Component pasted.");
     }
 
     private void DuplicateComponent()
@@ -246,7 +248,7 @@ public partial class MainWindow
         CurrentItems.Remove(selected);
         selected = null;
         RenderDesigner(); ShowProperties(); GenerateApp(); SaveProject();
-        Status("Componenta a fost ștearsă. O poți recupera din Istoric.");
+        Status("Component deleted. You can restore it from History.");
     }
 
     private void ChangeComponentOrder(bool front)

@@ -1,61 +1,52 @@
-# Formalini Forge — prototip Windows
+# Formalini Forge
 
-Editor desktop WPF pentru proiecte Windows conduse prin conversație. Această versiune este un prototip, nu un înlocuitor complet pentru Visual Studio sau Delphi.
+Formalini Forge is a Windows desktop prototype for building applications through a visual designer, code editor, and AI conversation. It is not yet a complete replacement for Visual Studio or Delphi. The editor, designer, and build tools work without an AI key. For AI features, you can provide an OpenAI or Gemini API key; keys are stored locally with Windows DPAPI.
 
-La prima pornire este selectat modul **Fără AI**. Nu este necesară nicio cheie pentru a crea și deschide proiecte, a edita codul sau interfața și a compila. Pentru conversația cu agentul, selectați OpenAI sau Gemini și adăugați cheia API corespunzătoare.
+The application starts in English. The Language menu retains an optional Romanian translation. Existing language preferences from earlier builds are reset to English once, then new selections are saved.
 
-## Starea verificării
+**Author:** Marco Irinel Pascalini · [formalini.com](https://formalini.com)
 
-Pachetul local verificat este în folderul `release-2026-10-11-unsaved-guard` din workspace-ul de dezvoltare; repository-ul GitHub conține sursele, nu binarele publicate. Pentru a crea un pachet propriu, folosiți `dotnet publish FormaliniForge/FormaliniForge.csproj -c Release -o publish` și porniți `FormaliniForge.exe` **din folderul `publish`**, împreună cu DLL-urile și celelalte fișiere alăturate; copierea doar a EXE-ului nu este suficientă. Testul intern construiește proiecte WPF, C, C++, Pascal și VB, verifică modulul hibrid C până la publicarea DLL-ului și generează proiecte Vue, React și React Native. Buildurile Vite pentru Vue/React și exportul web Expo pentru proiectul React Native generat au fost verificate. Dacă npm raportează `UNABLE_TO_GET_ISSUER_CERT_LOCALLY` sau erori similare, editorul reîncearcă folosind certificatele de încredere Windows.
+**License:** [MIT](LICENSE)
 
-Pentru verificarea sursei fără publicare sau lansare de EXE:
+## Support and contact
+
+PayPal donations: **marco@pascalini.com**.
+
+For IT job offers, feature requests, changes, and other project inquiries, use the [contact form at formalini.com](https://formalini.com) or email **contact@formalini.com**. See [SUPPORT.md](SUPPORT.md).
+
+## Build and run
+
+Requirements: Windows, .NET 8 SDK, and the compiler or runtime required by the project you want to create. C/C++ projects require Visual Studio Build Tools, GCC, or Clang; Pascal projects require Free Pascal. Web projects require Node.js and npm. Compiler copies and published binaries from the development workspace are not part of this repository.
 
 ```powershell
 dotnet build FormaliniForge/FormaliniForge.csproj -c Release -p:UseAppHost=false
+dotnet publish FormaliniForge/FormaliniForge.csproj -c Release -o publish
 ```
 
-## Funcții implementate
+Run `publish/FormaliniForge.exe` from its folder alongside the generated DLLs and support files. Copying the EXE alone is insufficient.
 
-- Paletă de comenzi (`Ctrl+Shift+P`), formatare JSON/XML/XAML (`Shift+Alt+F`) și extensii v1 instalate din ZIP pentru comenzi de inserare și fragmente de cod. Detalii și surse în [analiza ecosistemului VS Code](docs/vscode-ecosystem.md).
-- Contor AI pentru cereri și tokenuri raportate de API, separat pentru OpenAI și Gemini. Poți introduce un buget de tokenuri; acesta nu este soldul real al furnizorului.
+## What is implemented
 
-- Proiecte C#/WPF, C, C++, Pascal și VB.NET, structură de fișiere și editor în taburi cu colorare sintactică, completare locală, căutare și înlocuire. Designerul creează ferestre Windows native pentru C/C++/Pascal, formulare Windows Forms pentru VB și ferestre WPF pentru C#.
-- La închiderea editorului, fișierele modificate trebuie salvate: dialogul oferă salvare sau revenire în aplicație. Închiderea este anulată dacă salvarea eșuează.
-- Fișierele HTML generate au structură și indentare lizibile. HTML-ul existent pe un singur rând este formatat la deschidere. Taburile HTML au modurile Cod, Vizual și Împărțit; poți edita textul vizual și insera titluri, paragrafe, butoane, tabele, linkuri și imagini. Pentru shell-ul React/Vue, interfața aplicației se editează în Designer, iar HTML-ul de intrare în modul Cod.
-- Proprietățile de culoare au selector vizual; fundalul și culorile componentelor apar în Designer imediat după aplicare.
-- Proiecte Vue și React cu componente vizuale specifice și build Vite către `publish/web`; proiecte React Native/Expo cu componente mobile și pachet sursă ZIP în `publish`. Codul personalizat se scrie în `ForgeScreen`, iar designerul regenerează separat `ForgeLayout`. **Run** instalează dependențele necesare, pornește serverul local și deschide automat previzualizarea în tabul Browser integrat; **Stop** îl oprește. Dacă npm semnalează o eroare de certificat, editorul reîncearcă folosind certificatele de încredere Windows, fără a dezactiva verificarea TLS. Pentru buildurile web este necesar Node.js/npm cu acces la registrul de pachete. Pachetul React Native este sursă pentru un flux ulterior de build Android/iOS, nu un APK sau IPA.
-- Proiecte hibride C#/WPF + C: meniul Construire adaugă un modul C exportat ca DLL și o punte P/Invoke. Buildul compilează DLL-ul și îl include în publicarea aplicației.
-- Designer vizual C#/WPF cu mai multe ferestre, tragerea componentelor, 24 de controale WPF uzuale, proprietăți pentru dimensiuni, culori, font și tooltip, și istoric pentru revenire.
-- Componentele de pe formular au mânere de redimensionare și pot fi mutate. Clic dreapta oferă copiere, decupare, lipire, duplicare, ordinea suprapunerii, aliniere la grilă, proprietăți și ștergere. Delete, Ctrl+C/X/V/D și săgețile funcționează în designer.
-- Exploratorul de proiect, componentele, proprietățile, datele și asistentul sunt panouri mobile în interiorul editorului. Pot fi minimizate, maximizate, redimensionate și readuse la poziția inițială din meniul Ferestre.
-- Panoul Proprietăți urmărește selecția: fundalul designerului arată setările ferestrei, iar fiecare control arată proprietățile sale generale, specifice și alte proprietăți simple editabile. Modificările sunt salvate în proiect și scrise în XAML-ul generat.
-- Meniul principal include scurtături: Ctrl+N proiect nou, Ctrl+O deschide, Ctrl+S salvează, Ctrl+F caută, Ctrl+H înlocuiește, Ctrl+Shift+F caută în proiect, F5 rulează, F6 construiește, F7 pornește modul Debug.
-- Ctrl+Shift+N creează un fișier cu orice extensie permisă în proiect. Meniul Ajutor > Despre afișează `formalini.com` și `Developer: Marco PASCALINI`. Paletele de componente se schimbă după tipul proiectului.
-- Agent AI prin cheie API OpenAI sau Gemini pentru generare și editare de cod și componente. Cheile sunt păstrate local prin Windows DPAPI.
-- „Creează din descriere” generează o aplicație Hello World fără cod și fără cheie AI; opțional o construiește și o pornește. Cererile generale folosesc agentul AI configurat. În tabul Cod, câmpul „Generează în fișierul deschis” tratează Hello World local sau trimite cererea agentului, limitând modificarea la fișierul selectat.
-- Explorare vizuală a unei baze SQLite și legarea unui tabel la un `DataGrid` selectat. Baza este copiată în proiect.
-- Dictare prin motorul de recunoaștere vocală disponibil în Windows.
-- Git local: inițializare, status, remote GitHub, commit, push și pull prin Git instalat pe sistem.
-- Compilare/publicare Windows. Aplicațiile C#/WPF includ runtime .NET și produc un EXE împreună cu fișierele necesare. Pentru C/C++ se folosesc GCC/Clang sau Visual Studio Build Tools; pentru Pascal se folosește Free Pascal. Compilatoarele trebuie instalate separat după clonarea repository-ului; copiile locale din `tools/fpc` nu sunt incluse în Git. Compilatorul Microsoft C/C++ existent în workspace-ul de dezvoltare a fost verificat prin construirea de exemple native.
-- Dependențe externe declarate de utilizator: aplicația generată verifică existența unui fișier, cere acord înainte de pornirea installerului inclus, verifică SHA-256 și confirmă instalarea. Folosiți numai installere de origine sigură și cu drept de redistribuire.
-- Mod Debug cu simboluri și jurnalul procesului; nu există încă depanare cu breakpoint și execuție pas cu pas.
+- Create and open projects for C#/WPF, VB.NET/Windows Forms, native C, C++, and Pascal, plus Vue, React, and React Native/Expo projects. The designer offers controls appropriate to each project type.
+- Create a Hello World application from a plain-language request without code or an AI key. General requests use the configured AI provider and should be reviewed before publishing.
+- Edit files in tabs with syntax highlighting, basic autocomplete, search and replace, project-wide search, and local formatting for HTML, JSON, XML, and XAML. HTML files offer Code, Visual, and Split views.
+- Drag, move, resize, copy, duplicate, and delete designer components. Edit form and component properties, including colors, and undo changes from project history.
+- Use a command palette, dockable tool panels, a project file tree, a component library, an inspector, SQLite table browsing and DataGrid binding for C#/WPF, and Windows speech dictation where a recognition engine is installed.
+- Build, run, and view logs inside the editor. Vue and React previews open in the integrated browser. React Native/Expo builds produce a source ZIP for a later Android or iOS build flow, not an APK or IPA.
+- Add a C DLL module to a C#/WPF project with a generated P/Invoke bridge. Declare external installers for C#/WPF applications; generated applications check for dependencies, request consent, verify the installer SHA-256, and confirm installation.
+- Use local Git actions and GitHub remotes through Git installed on the machine. Install v1 extensions from ZIP files to add insertion commands and snippets. See [the VS Code ecosystem notes](docs/vscode-ecosystem.md).
+- Track AI requests and provider-reported token usage with an optional local token budget. This is not the provider's billing balance.
 
-## Limite importante
+## Current limits
 
-- Designerul vizual funcționează pentru C#/WPF, VB/Windows Forms, ferestre Windows native C/C++/Pascal și ecrane Vue/React/React Native. Legarea SQLite, acțiunile ghidate ale controalelor, ferestrele multiple și diagnosticele avansate rămân disponibile doar în C#/WPF. Pentru celelalte limbaje Windows, codul `forge_ui.*` este regenerat după schimbarea formularului; salvați logica proprie în fișiere separate. Integrarea hibridă implementată acum este C# + C prin DLL.
-- Biblioteca de controale acoperă elemente WPF frecvente; nu include toate controalele Windows și nici configurarea avansată a fiecăruia. Se pot edita direct fișierele XAML pentru scenarii avansate.
-- Importul complet al XAML editat manual în designer nu este implementat. Regenerarea vizuală poate înlocui modificările manuale ale fișierului XAML; istoricul permite recuperarea.
-- GitHub folosește configurarea Git existentă. Nu există conectare OAuth, interfață pentru issue-uri, pull request-uri sau gestionarea contului.
-- Dictarea necesită un motor de recunoaștere instalat și nu a fost testată cu un microfon în această sesiune.
-- Nu există încă pachet de instalare semnat digital, testare pe toate edițiile Windows sau garanție că un antivirus nu va semnala un fișier. Semnarea, proveniența verificabilă, scanarea release-ului și testarea pe sisteme curate sunt necesare înainte de distribuire.
-- Agentul poate trimite fișiere din proiect către furnizorul AI ales. Verificați proiectul dacă conține date sensibile și revizuiți codul generat înainte de publicare.
-- O cheie OpenAI API este diferită de abonamentul ChatGPT.
-- Generarea locală din text recunoaște în prezent Hello World / Salut, lume. Pentru cereri arbitrare este necesară o cheie API OpenAI sau Gemini; rezultatul AI trebuie revizuit.
+The designer supports the project types above, but SQLite binding, guided control actions, multiple windows, and advanced diagnostics are currently strongest in C#/WPF. C/C++/Pascal designer code is regenerated after visual changes, so custom logic belongs in separate files. The implemented hybrid path is C# plus C through a DLL.
 
-## Incidentul `Smoke.exe`
+Full import of manually edited XAML into the designer is not implemented. Debug mode provides symbols and process logs, but no breakpoints or step-by-step execution. GitHub support uses the machine's existing Git credentials; it does not provide OAuth, issues, or pull requests. Dictation requires a Windows recognition engine and has not been tested with every microphone.
 
-Proiectul `tests/Smoke` este un test intern care publică un proiect exemplu. Testul actual a fost rulat prin `Smoke.dll`, fără lansarea unui nou `Smoke.exe`; aplicația exemplu a fost publicată în format cu mai multe fișiere. Pentru analiza alertei anterioare sunt necesare numele antivirusului, denumirea exactă a detecției și calea fișierului semnalat.
+Release installers are not digitally signed or validated on every Windows edition. Antivirus compatibility cannot be guaranteed. Sign and scan release artifacts, verify their provenance, and test on clean systems before distribution. AI requests can send project files to the selected provider; review sensitive files and generated code before use.
 
+## Verification
 
+The internal smoke test builds WPF, C, C++, Pascal, and VB examples, checks the C hybrid DLL, and generates Vue, React, and React Native projects. Vite builds and an Expo web export were verified in the development workspace. When npm encounters a local issuer certificate error, the editor retries with the Windows trusted certificate store without disabling TLS verification.
 
-
+The earlier `Smoke.exe` antivirus report requires the antivirus product name, detection label, and exact flagged path to investigate. The current internal test was run through `Smoke.dll` without launching a new `Smoke.exe`.

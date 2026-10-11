@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -35,7 +37,7 @@ public partial class MainWindow
                 if (unsaved.Length > 8) list += "\n…";
                 var message = english
                     ? "Save these files before closing Formalini Forge?\n\n" + list + "\n\nChoose No to return to the editor."
-                    : "Salvezi aceste fișiere înainte de a închide Formalini Forge?\n\n" + list + "\n\nAlege Nu pentru a reveni în editor.";
+                    : "Save these files before closing Formalini Forge?\n\n" + list + "\n\nChoose No to return to the editor.";
                 if (System.Windows.MessageBox.Show(this, message, T("Fișiere nesalvate"), MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.Yes) != MessageBoxResult.Yes)
                     return;
                 SaveProject();

@@ -1,4 +1,6 @@
-﻿using System.Configuration;
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
+using System.Configuration;
 using System.Data;
 using System.Windows;
 using Application = System.Windows.Application;

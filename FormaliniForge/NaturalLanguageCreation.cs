@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Marco Irinel Pascalini (https://formalini.com)
+// SPDX-License-Identifier: MIT
 using System.IO;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -47,7 +49,7 @@ public partial class MainWindow
             folderRow.Children.Add(folderBox);
             browse.Click += (_, _) =>
             {
-                using var picker = new System.Windows.Forms.FolderBrowserDialog { Description = "Alege folderul pentru noul proiect" };
+                using var picker = new System.Windows.Forms.FolderBrowserDialog { Description = T("Alege folderul pentru noul proiect") };
                 if (picker.ShowDialog() == System.Windows.Forms.DialogResult.OK) folderBox.Text = picker.SelectedPath;
             };
             layout.Children.Add(folderRow);
@@ -65,7 +67,7 @@ public partial class MainWindow
             if (IsHelloWorldRequest(requestBox.Text) && autoRun.IsChecked == true && await BuildProject())
             {
                 Process.Start(new ProcessStartInfo(lastBuiltExe!) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(lastBuiltExe!)! });
-                Status("Aplicația Hello World este deschisă.");
+                Status("The Hello World application is open.");
             }
         }
         catch (Exception ex) { Error(ex); }
@@ -73,15 +75,15 @@ public partial class MainWindow
 
     private void CreateProjectFromRequest(string root, string name, string request)
     {
-        if (!Directory.Exists(root)) throw new InvalidOperationException("Alege un folder existent pentru proiect.");
-        if (!Regex.IsMatch(name, @"^[A-Za-z_][A-Za-z0-9_]*$")) throw new InvalidOperationException("Numele aplicației trebuie să conțină doar litere, cifre și _.");
-        if (request.Length == 0) throw new InvalidOperationException("Descrie aplicația înainte de a continua.");
+        if (!Directory.Exists(root)) throw new InvalidOperationException("Choose an existing folder for the project.");
+        if (!Regex.IsMatch(name, @"^[A-Za-z_][A-Za-z0-9_]*$")) throw new InvalidOperationException("The application name must contain only letters, digits, and _.");
+        if (request.Length == 0) throw new InvalidOperationException("Describe the application before continuing.");
         var hello = IsHelloWorldRequest(request);
         if (!hello && (Provider == "Fără AI" || ApiKeyBox.Password.Trim().Length == 0))
-            throw new InvalidOperationException("Pentru cereri diferite de Hello World, alege OpenAI sau Gemini și introdu cheia API. Exemplul Hello World funcționează fără cheie.");
+            throw new InvalidOperationException("For requests beyond Hello World, choose OpenAI or Gemini and enter an API key. The Hello World example works without a key.");
         var target = Path.Combine(root, name);
         if (Directory.Exists(target) && Directory.EnumerateFileSystemEntries(target).Any())
-            throw new InvalidOperationException("Folderul proiectului există deja și nu este gol.");
+            throw new InvalidOperationException("The project folder already exists and is not empty.");
         SaveCode();
         Directory.CreateDirectory(target);
         projectDir = target;
@@ -100,10 +102,10 @@ public partial class MainWindow
         SaveProject();
         OpenProject(target);
         MainTabs.SelectedIndex = 0;
-        if (hello) Status("Aplicația Hello World este gata. Apasă F5 pentru a o construi și rula.");
+        if (hello) Status("The Hello World application is ready. Press F5 to build and run it.");
         else
         {
-            PromptBox.Text = "Creează aplicația descrisă mai jos. Generează interfața și codul necesar, apoi explică pe scurt rezultatul.\n\n" + request;
+            PromptBox.Text = "Create the application described below. Generate the required interface and code, then briefly explain the result.\n\n" + request;
             SendPrompt_Click(this, new RoutedEventArgs());
         }
     }
@@ -114,23 +116,23 @@ public partial class MainWindow
         {
             RequireProject();
             var request = CodeRequestBox.Text.Trim();
-            if (request.Length == 0) throw new InvalidOperationException("Descrie ce trebuie să facă fișierul deschis.");
+            if (request.Length == 0) throw new InvalidOperationException("Describe what the open file should do.");
             var document = openEditors.Values.FirstOrDefault(x => ReferenceEquals(x.Tab, EditorTabs.SelectedItem));
-            if (document == null) throw new InvalidOperationException("Deschide mai întâi un fișier din exploratorul proiectului.");
+            if (document == null) throw new InvalidOperationException("Open a file from the project explorer first.");
             if (IsHelloWorldRequest(request))
             {
                 var source = HelloWorldSource(document.Path);
                 Snapshot();
                 document.Editor.Text = source;
                 SaveProject();
-                Status("Codul Hello World a fost generat în " + Path.GetFileName(document.Path) + ".");
+                Status("Hello World code was generated in " + Path.GetFileName(document.Path) + ".");
                 CodeRequestBox.Text = "";
                 return;
             }
             if (Provider == "Fără AI" || ApiKeyBox.Password.Trim().Length == 0)
-                throw new InvalidOperationException("Pentru cereri de cod generale, alege OpenAI sau Gemini și introdu cheia API. Hello World funcționează și fără AI.");
+                throw new InvalidOperationException("For general code requests, choose OpenAI or Gemini and enter an API key. Hello World also works without AI.");
             pendingAiTarget = Path.GetRelativePath(projectDir!, document.Path).Replace('\\', '/');
-            PromptBox.Text = "Modifică exclusiv fișierul " + pendingAiTarget + " pentru această cerere: " + request + ". Păstrează codul existent necesar și returnează fișierul complet.";
+            PromptBox.Text = "Modify only file " + pendingAiTarget + " for this request: " + request + ". Keep the necessary existing code and return the complete file.";
             SendPrompt_Click(sender, e);
             CodeRequestBox.Text = "";
         }
@@ -153,9 +155,9 @@ public partial class MainWindow
                 return "using System.Windows;\nnamespace " + state.Name + ";\npublic partial class " + className + " : Window\n{\n    public " + className + "()\n    {\n        InitializeComponent();\n        Loaded += (_, _) => MessageBox.Show(\"" + greeting + "\");\n    }\n}\n";
             }
             var typeName = Path.GetFileNameWithoutExtension(path);
-            if (!Regex.IsMatch(typeName, @"^[A-Za-z_][A-Za-z0-9_]*$")) throw new InvalidOperationException("Alege un fișier C# cu un nume valid.");
+            if (!Regex.IsMatch(typeName, @"^[A-Za-z_][A-Za-z0-9_]*$")) throw new InvalidOperationException("Choose a C# file with a valid name.");
             return "namespace " + state.Name + ";\npublic static class " + typeName + "\n{\n    public static string Message => \"" + greeting + "\";\n}\n";
         }
-        throw new InvalidOperationException("Pentru Hello World, deschide un fișier .cs, .c, .cpp sau .pas.");
+        throw new InvalidOperationException("For Hello World, open a .cs, .c, .cpp, or .pas file.");
     }
 }
