@@ -1,0 +1,141 @@
+using System.IO;
+using System.IO.Compression;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+
+namespace FormaliniForge;
+
+public sealed class ForgeExtensionManifest
+{
+    public int ApiVersion { get; set; }
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Publisher { get; set; } = "";
+    public string Version { get; set; } = "";
+    public string Description { get; set; } = "";
+    public List<ForgeExtensionCommand> Commands { get; set; } = new();
+    public List<ForgeExtensionSnippet> Snippets { get; set; } = new();
+}
+
+public sealed class ForgeExtensionCommand
+{
+    public string Id { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string InsertText { get; set; } = "";
+}
+
+public sealed class ForgeExtensionSnippet
+{
+    public string Trigger { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Body { get; set; } = "";
+    public List<string> Extensions { get; set; } = new();
+}
+
+public sealed class InstalledForgeExtension
+{
+    public required ForgeExtensionManifest Manifest { get; init; }
+    public required string DirectoryPath { get; init; }
+    public bool Enabled { get; set; }
+}
+
+public sealed class ExtensionCatalog
+{
+    private static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true, WriteIndented = true };
+    public string Root { get; }
+    public List<InstalledForgeExtension> Items { get; } = new();
+
+    public ExtensionCatalog(string root) => Root = Path.GetFullPath(root);
+
+    public void Reload()
+    {
+        Directory.CreateDirectory(Root);
+        Items.Clear();
+        foreach (var folder in Directory.EnumerateDirectories(Root))
+        {
+            var manifestPath = Path.Combine(folder, "manifest.json");
+            if (!File.Exists(manifestPath)) continue;
+            try
+            {
+                var manifest = ReadManifest(manifestPath);
+                if (!string.Equals(manifest.Id, Path.GetFileName(folder), StringComparison.OrdinalIgnoreCase)) continue;
+                Items.Add(new InstalledForgeExtension { Manifest = manifest, DirectoryPath = folder,
+                    Enabled = File.Exists(Path.Combine(folder, "enabled.flag")) });
+            }
+            catch { /* An invalid package is ignored, and cannot contribute commands. */ }
+        }
+    }
+
+    public InstalledForgeExtension Install(string zipPath)
+    {
+        Directory.CreateDirectory(Root);
+        using var archive = ZipFile.OpenRead(zipPath);
+        if (archive.Entries.Count is < 1 or > 256) throw new InvalidDataException("Arhiva extensiei are prea multe fișiere.");
+        var manifestEntry = archive.GetEntry("manifest.json") ?? throw new InvalidDataException("Lipsește manifest.json la rădăcina arhivei.");
+        if (manifestEntry.Length > 128_000) throw new InvalidDataException("Manifestul este prea mare.");
+        ForgeExtensionManifest manifest;
+        using (var stream = manifestEntry.Open()) manifest = Validate(JsonSerializer.Deserialize<ForgeExtensionManifest>(stream, Json));
+        var destination = Path.Combine(Root, manifest.Id);
+        if (Directory.Exists(destination)) throw new IOException("Extensia este deja instalată. Dezinstaleaz-o înainte de înlocuire.");
+        var stage = Path.Combine(Root, ".install-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(stage);
+        try
+        {
+            long total = 0;
+            var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var entry in archive.Entries)
+            {
+                total += entry.Length;
+                if (entry.Length > 4_000_000 || total > 8_000_000) throw new InvalidDataException("Extensia depășește limita de 8 MB.");
+                var name = entry.FullName.Replace('/', Path.DirectorySeparatorChar);
+                if (name.Length == 0 || Path.IsPathRooted(name)) throw new InvalidDataException("Cale invalidă în arhivă.");
+                var target = Path.GetFullPath(Path.Combine(stage, name));
+                if (!target.StartsWith(stage + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("Arhiva conține o cale în afara extensiei.");
+                if (!paths.Add(target)) throw new InvalidDataException("Arhiva conține căi duplicate.");
+                if (name.EndsWith(Path.DirectorySeparatorChar)) { Directory.CreateDirectory(target); continue; }
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                entry.ExtractToFile(target);
+            }
+            var extracted = ReadManifest(Path.Combine(stage, "manifest.json"));
+            if (extracted.Id != manifest.Id) throw new InvalidDataException("Manifestul instalat nu corespunde celui verificat.");
+            // Explicit enablement happens in the UI, after inspection of the manifest.
+            Directory.Move(stage, destination);
+        }
+        catch { if (Directory.Exists(stage)) Directory.Delete(stage, true); throw; }
+        Reload();
+        return Items.Single(x => x.Manifest.Id == manifest.Id);
+    }
+
+    public void SetEnabled(InstalledForgeExtension extension, bool enabled)
+    {
+        var marker = Path.Combine(extension.DirectoryPath, "enabled.flag");
+        if (enabled) File.WriteAllText(marker, "enabled"); else if (File.Exists(marker)) File.Delete(marker);
+        extension.Enabled = enabled;
+    }
+
+    public void Remove(InstalledForgeExtension extension)
+    {
+        if (!Path.GetFullPath(extension.DirectoryPath).StartsWith(Root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Calea extensiei este în afara catalogului.");
+        Directory.Delete(extension.DirectoryPath, true);
+        Reload();
+    }
+
+    private static ForgeExtensionManifest ReadManifest(string path)
+    {
+        if (new FileInfo(path).Length > 128_000) throw new InvalidDataException("Manifestul este prea mare.");
+        return Validate(JsonSerializer.Deserialize<ForgeExtensionManifest>(File.ReadAllText(path), Json));
+    }
+
+    private static ForgeExtensionManifest Validate(ForgeExtensionManifest? manifest)
+    {
+        if (manifest == null || manifest.ApiVersion != 1 || !Regex.IsMatch(manifest.Id, "^[a-z][a-z0-9.-]{2,79}$") ||
+            string.IsNullOrWhiteSpace(manifest.Name) || manifest.Name.Length > 100 || manifest.Commands.Count > 100 || manifest.Snippets.Count > 200)
+            throw new InvalidDataException("Manifestul extensiei este invalid sau versiunea API nu este suportată.");
+        if (manifest.Commands.Any(x => string.IsNullOrWhiteSpace(x.Title) || x.Title.Length > 120 || x.InsertText.Length > 100_000) ||
+            manifest.Snippets.Any(x => !Regex.IsMatch(x.Trigger, "^[A-Za-z_][A-Za-z0-9_]{0,39}$") || x.Body.Length > 100_000))
+            throw new InvalidDataException("Comenzile sau fragmentele extensiei sunt invalide.");
+        return manifest;
+    }
+}

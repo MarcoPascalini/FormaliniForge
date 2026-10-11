@@ -1,0 +1,14 @@
+{
+  "apiVersion": 1,
+  "id": "example.hello",
+  "name": "Hello snippets",
+  "publisher": "Formalini Forge",
+  "version": "1.0.0",
+  "description": "Exemplu: o comandă și un fragment pentru fișiere C#.",
+  "commands": [
+    { "id": "insert-greeting", "title": "Insert greeting", "insertText": "System.Windows.MessageBox.Show(\"Hello, world!\");" }
+  ],
+  "snippets": [
+    { "trigger": "hello", "description": "Show a greeting", "body": "System.Windows.MessageBox.Show(\"Hello, world!\");", "extensions": [".cs"] }
+  ]
+}

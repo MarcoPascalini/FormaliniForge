@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/.forge-npm-cache/
+**/.expo/
+dist/
+dist-single/
+**/publish/
+**/.forge-history/
+artifacts/
+release-*/
+smoke-generated/
+tests/Smoke/out/
+tools/compiler-downloads/
+tools/fpc/
+*.obj
+*.user
